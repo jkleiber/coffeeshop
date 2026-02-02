@@ -1,0 +1,57 @@
+/* Apply to the whole app */
+:root {
+    --primary: #3b82f6;
+    --bg-gray: #f9fafb;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+}
+
+body {
+    margin: 0;
+    /* The "Modern System Stack" */
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--bg-gray);
+    color: var(--text-main);
+    line-height: 1.5;
+}
+
+/* Make headers feel punchy and modern */
+h1,
+h2,
+h3,
+h4 {
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    margin-bottom: 0.5rem;
+}
+
+/* Example for your Order Cards or Menu Items */
+.card {
+    background: white;
+    border-radius: 12px;
+    /* Soft, modern corners */
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    /* Subtle elevation */
+    border: 1px solid #e5e7eb;
+}
+
+button {
+    font-family: inherit;
+    /* Ensures buttons don't revert to default fonts */
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 0.75rem 1.25rem;
+    transition: all 0.2s ease;
+}
+
+input,
+select {
+    font-family: inherit;
+    font-size: 1rem;
+    padding: 0.6rem;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
