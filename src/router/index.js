@@ -24,8 +24,13 @@ router.beforeEach(async (to, from, next) => {
   // Wait for Firebase to check if user is logged in
   await authStore.initPromise
 
+  const isLoginPage = to.path === '/login'
+
   if (to.meta.requiresEmployee && !authStore.isEmployee) {
     next('/login') // Redirect if not an employee
+  } else if (isLoginPage && authStore.isEmployee) {
+    // Prevent logged-in employees from going back to the login screen
+    next('/cashier')
   } else {
     next()
   }

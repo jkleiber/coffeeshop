@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { auth, db } from '../firebase'
 import { signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'firebase/auth'
 import { doc, getDoc } from 'firebase/firestore'
+import router from '@/router'
 
 export const useAuthStore = defineStore('auth', () => {
   const user = ref(null)
@@ -29,8 +30,33 @@ export const useAuthStore = defineStore('auth', () => {
     authInitialized.value()
   })
 
-  const login = (email, password) => signInWithEmailAndPassword(auth, email, password)
-  const logout = () => signOut(auth)
+  const login = async (email, password) => {
+    try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password)
+        
+        // 1. Check firestore for employee status to keep state fresh.
+        const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
+        isEmployee.value = userDoc.exists() && userDoc.data().role === 'employee'
+    
+        // 2. NOW push the route. Doing it here ensures the state is ready.
+        await router.push('/cashier')
+        
+      } catch (err) {
+        throw err
+      }
+  }
+
+  const logout = async () => {
+    try {
+        await signOut(auth)
+        user.value = null
+
+        await router.push('/')
+    } catch (error) {
+        console.error("Logout failed")
+        console.error(error)
+    }
+  } 
 
   return { user, isEmployee, loading, login, logout, initPromise }
 })
