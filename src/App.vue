@@ -8,13 +8,19 @@ const authStore = useAuthStore()
     <nav class="mode-switcher">
       <router-link to="/" class="nav-btn" active-class="active">🛒 Place Order</router-link>
 
-      <template v-if="authStore.isEmployee">
+      <template v-if="authStore.isEmployee && authStore.isLoggedIn">
         <router-link to="/cashier" class="nav-btn" active-class="active">💵 Cashier</router-link>
         <router-link to="/kitchen" class="nav-btn" active-class="active">🔥 Kitchen</router-link>
-        <button @click="authStore.logout" class="nav-btn logout">Logout</button>
       </template>
 
-      <router-link v-else to="/login" class="nav-btn" active-class="active">🔑 Login</router-link>
+      <router-link v-if="authStore.isLoggedIn" to="/profile" class="nav-btn" active-class="active">
+        👤 Profile
+      </router-link>
+
+      <template v-else>
+        <router-link to="/login" class="nav-btn" active-class="active">🔑 Login</router-link>
+        <router-link to="/register" class="nav-btn" active-class="active">📋 Register</router-link>
+      </template>
     </nav>
 
     <main>

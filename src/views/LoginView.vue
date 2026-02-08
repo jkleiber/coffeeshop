@@ -21,8 +21,7 @@ const handleLogin = async () => {
         <div class="login-card">
             <div class="login-header">
                 <span class="emoji">🧋</span>
-                <h1>Barista Login</h1>
-                <p>Access the Barista dashboard</p>
+                <h1>Login</h1>
             </div>
 
             <form @submit.prevent="handleLogin">
