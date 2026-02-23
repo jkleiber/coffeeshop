@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed, onUnmounted } from 'vue'
 import { db } from '../firebase'
 import { 
-  collection, addDoc, updateDoc, doc, onSnapshot, query, orderBy 
+  collection, addDoc, updateDoc, getDoc, doc, onSnapshot, query, orderBy, increment 
 } from 'firebase/firestore'
 
 export const useCoffeeStore = defineStore('coffee', () => {
@@ -58,24 +58,85 @@ export const useCoffeeStore = defineStore('coffee', () => {
     cart.value = []
   }
 
+  const computeItemPrice = (item, index, drinkCount) => {
+      console.log(item.name + ": " + drinkCount + " + " + index)
+      let itemPrice = (item.price);
+
+      // If the customer's additional drinks put them at one more than some multiple of 5 drinks, give them a free drink when that occurs.
+      const newDrinkCount = drinkCount + index + 1;
+      if (newDrinkCount > 0 && newDrinkCount % 6 == 0) {
+          return 0.0;
+      }
+
+      return itemPrice;
+  }
+
   // 3. Actions
-  const placeOrder = async (items, customerName) => {
+  const placeOrder = async (items, customerName, customerUid) => {
+    console.log(customerUid)
+    const userDocRef = doc(db, 'users', customerUid)
+    const userRef = await getDoc(userDocRef);
+    console.log(userRef)
+
+    let drinkCount = 0;
+    if (userRef.exists()) {
+      drinkCount = userRef.data().drinkCount;
+    } else {
+      console.log("user does not exist")
+    }
+    
+    let totalPrice = 0.00;
+    let numFreeDrinks = 0;
+    items.forEach((item, index) => {
+      const price = computeItemPrice(item, index, drinkCount);
+      if (price < 0.01) {
+        numFreeDrinks += 1;
+      }
+      totalPrice += price;
+      item.price = price;
+      console.log("$"+price.toFixed(2))
+    });
+
     const newOrder = {
       customerName,
+      user_id: customerUid,
       items: items, // Firebase handles arrays perfectly
       status: 'Received', 
       isPaid: false,
+      price: totalPrice,
+      numFreeDrinks: numFreeDrinks,
       createdAt: Date.now(), // Use timestamp for sorting
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
+
+    await updateDrinkCount(customerUid, items.length);
     
     // Add to Firestore
     const docRef = await addDoc(collection(db, "orders"), newOrder);
     return docRef.id 
   }
 
+  const updateDrinkCount = async (customerUid, numDrinks) => {
+    if (!customerUid) {
+      return;
+    }
+
+    try {
+      const customerRef = doc(db, 'users', customerUid);
+      
+      await updateDoc(customerRef, {
+        // This is atomic - Firebase handles the math on the server
+        drinkCount: increment(numDrinks) 
+      });
+      
+    } catch (error) {
+      console.error("Error updating order/loyalty:", error);
+    }
+  };
+
   const updateStatus = async (orderId, newStatus) => {
     const orderRef = doc(db, "orders", orderId);
+
     await updateDoc(orderRef, { status: newStatus });
   }
 
@@ -98,5 +159,5 @@ export const useCoffeeStore = defineStore('coffee', () => {
       .sort((a,b) => a.createdAt - b.createdAt)
   })
 
-  return { menu, orders, activeOrders, cart, listenToOrders, placeOrder, updateStatus, togglePayment, addToCart, removeFromCart, clearCart }
+  return { menu, orders, activeOrders, cart, listenToOrders, placeOrder, updateStatus, togglePayment, addToCart, removeFromCart, clearCart, computeItemPrice }
 })

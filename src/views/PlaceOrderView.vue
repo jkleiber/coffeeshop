@@ -1,8 +1,10 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useCoffeeStore } from '../stores/coffeeStore'
+import { useAuthStore } from '@/stores/authStore';
 
 const store = useCoffeeStore()
+const authStore = useAuthStore()
 const cart = ref([])
 const customerFirstName = ref('')
 const customerLastName = ref('')
@@ -44,13 +46,24 @@ const myOrder = computed(() => {
 })
 
 const submitOrder = async () => {
-    if (store.cart.length === 0 || !customerFirstName.value || !customerLastName.value) return
-    const customerName = customerFirstName.value + " " + customerLastName.value;
-    const id = await store.placeOrder(store.cart, customerName)
+    if (store.cart.length === 0 || (!authStore.isLoggedIn && (!customerFirstName.value || !customerLastName.value))) return
+
+    let customerName = "";
+    let customerUid = null;
+    if (authStore.isLoggedIn) {
+        customerName = authStore.userName;
+        customerUid = authStore.user?.uid;
+    } else {
+        customerName = customerFirstName.value + " " + customerLastName.value;
+    }
+
+    const id = await store.placeOrder(store.cart, customerName, customerUid)
     if (id) {
         currentOrderId.value = id;
         // Store it so if they refresh the page, they don't lose their tracker
         localStorage.setItem('activeOrderId', id);
+
+        authStore.refreshUserAfterOrder();
 
         store.clearCart()
     }
@@ -145,12 +158,20 @@ const getStatusColor = (status) => {
                             {{ item.name === 'Latte' ? item.customizations.milk + ' milk | ' : '' }}
                             Sweetness: {{ item.customizations.sweetness }}
                         </div>
-                        <span class="item-price">${{ (item.price).toFixed(2) }}</span>
+                        <span class="item-price">${{ store.computeItemPrice(item, index, authStore?.drinkCount).toFixed(2)
+                        }}</span>
                     </div>
                 </div>
-                <input v-model="customerFirstName" placeholder="First Name" class="input-name" />
-                <input v-model="customerLastName" placeholder="Last Name" class="input-name" />
-                <button @click="submitOrder" class="btn-primary" :disabled="!(customerFirstName && customerLastName)">
+
+                <template v-if="!authStore.isLoggedIn">
+                    <input v-model="customerFirstName" placeholder="First Name" class="input-name" />
+                    <input v-model="customerLastName" placeholder="Last Name" class="input-name" />
+                    <span><router-link to="/register">Register</router-link> or <router-link to="/login">sign
+                            in</router-link> to get loyalty bonuses!</span>
+                </template>
+
+                <button @click="submitOrder" class="btn-primary" style="margin-top:1rem"
+                    :disabled="!authStore.isLoggedIn && !(customerFirstName && customerLastName)">
                     Place Order
                 </button>
             </div>
