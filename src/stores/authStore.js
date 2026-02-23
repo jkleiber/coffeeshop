@@ -17,13 +17,8 @@ export const useAuthStore = defineStore('auth', () => {
     authInitialized.value = resolve
   })
 
-  // Initialize and listen for auth changes
-  onAuthStateChanged(auth, async (firebaseUser) => {
-    loading.value = true
-    if (firebaseUser) {
-      user.value = firebaseUser
-      // Check Firestore for employee status
-      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
+  const updateCurrentUser = (userDoc) => {
+    if (userDoc) {
       isEmployee.value = userDoc.exists() && userDoc.data().role === 'employee'
       isLoggedIn.value = userDoc.exists()
       userName.value = userDoc.data().name
@@ -33,6 +28,19 @@ export const useAuthStore = defineStore('auth', () => {
       userName.value = ""
       isEmployee.value = false
       isLoggedIn.value = false
+    }
+  }
+
+  // Initialize and listen for auth changes
+  onAuthStateChanged(auth, async (firebaseUser) => {
+    loading.value = true
+    if (firebaseUser) {
+      user.value = firebaseUser
+      // Check Firestore for employee status
+      const userDoc = await getDoc(doc(db, "users", firebaseUser.uid))
+      updateCurrentUser(userDoc);
+    } else {
+      updateCurrentUser(null);
     }
     loading.value = false
     authInitialized.value()
@@ -44,13 +52,13 @@ export const useAuthStore = defineStore('auth', () => {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       const uid = userCredential.user.uid;
   
-      // 2. Create the employee document in Firestore
+      // 2. Create the user document in Firestore
       await setDoc(doc(db, 'users', uid), {
         name: name,
         email: email,
         role: 'customer', // Default role
         createdAt: new Date(),
-        freeDrinkProgress: 0
+        drinkCount: 0
       });
   
       // 3. Update local state and redirect
@@ -69,10 +77,7 @@ export const useAuthStore = defineStore('auth', () => {
         
         // 1. Check firestore for employee status to keep state fresh.
         const userDoc = await getDoc(doc(db, "users", userCredential.user.uid))
-        isEmployee.value = userDoc.exists() && userDoc.data().role === 'employee'
-        isLoggedIn.value = userDoc.exists()
-        userName.value = userDoc.data().name
-        drinkCount.value = userDoc.data().drinkCount
+        updateCurrentUser(userDoc)
     
         // 2. NOW push the route. Doing it here ensures the state is ready.
         await router.push('/profile')
@@ -85,18 +90,21 @@ export const useAuthStore = defineStore('auth', () => {
   const logout = async () => {
     try {
         await signOut(auth)
-        user.value = null
-        isLoggedIn.value = false;
-        isEmployee.value = false;
-        userName.value = ""
-        drinkCount.value = 0
+        updateCurrentUser(null)
 
         await router.push('/')
     } catch (error) {
         console.error("Logout failed")
         console.error(error)
     }
-  } 
+  }
 
-  return { user, userName, isEmployee, isLoggedIn, loading, drinkCount, register, login, logout, initPromise }
+  const refreshUserAfterOrder = async () => {
+    if (isLoggedIn) {
+      const userDoc = await getDoc(doc(db, "users", user.value.uid))
+      updateCurrentUser(userDoc)
+    }
+  }
+
+  return { user, userName, isEmployee, isLoggedIn, loading, drinkCount, register, login, logout, initPromise, refreshUserAfterOrder }
 })

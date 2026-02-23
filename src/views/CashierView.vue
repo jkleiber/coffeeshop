@@ -27,11 +27,12 @@ onMounted(() => {
 
                 <div class="card-top">
                     <span class="customer-name">{{ order.customerName }}</span>
+                    <span class="price">${{ order.price.toFixed(2) }}</span>
                     <span class="time">{{ order.timestamp }}</span>
                 </div>
 
                 <ul class="items-list">
-                    <li v-for="(item, i) in order.items" :key="i">1x {{ item.name }}</li>
+                    <li v-for="(item, i) in order.items" :key="i">1x {{ item.name }} - ${{ item.price.toFixed(2) }}</li>
                 </ul>
 
                 <div class="controls">

@@ -15,6 +15,10 @@
                     <label>Email</label>
                     <p>{{ authStore.user?.email }}</p>
                 </div>
+                <div class="info-row">
+                    <label>Drinks Ordered</label>
+                    <p>{{ authStore.drinkCount }}</p>
+                </div>
             </div>
 
             <div class="loyalty-card">

@@ -49,17 +49,21 @@ const submitOrder = async () => {
     if (store.cart.length === 0 || (!authStore.isLoggedIn && (!customerFirstName.value || !customerLastName.value))) return
 
     let customerName = "";
+    let customerUid = null;
     if (authStore.isLoggedIn) {
         customerName = authStore.userName;
+        customerUid = authStore.user?.uid;
     } else {
         customerName = customerFirstName.value + " " + customerLastName.value;
     }
 
-    const id = await store.placeOrder(store.cart, customerName)
+    const id = await store.placeOrder(store.cart, customerName, customerUid)
     if (id) {
         currentOrderId.value = id;
         // Store it so if they refresh the page, they don't lose their tracker
         localStorage.setItem('activeOrderId', id);
+
+        authStore.refreshUserAfterOrder();
 
         store.clearCart()
     }
@@ -154,7 +158,8 @@ const getStatusColor = (status) => {
                             {{ item.name === 'Latte' ? item.customizations.milk + ' milk | ' : '' }}
                             Sweetness: {{ item.customizations.sweetness }}
                         </div>
-                        <span class="item-price">${{ (item.price).toFixed(2) }}</span>
+                        <span class="item-price">${{ store.computeItemPrice(item, index, authStore?.drinkCount).toFixed(2)
+                        }}</span>
                     </div>
                 </div>
 
