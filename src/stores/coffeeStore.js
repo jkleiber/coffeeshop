@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
 import { db } from '../firebase'
 import { 
   collection, addDoc, updateDoc, getDoc, doc, onSnapshot, query, orderBy, increment 
@@ -36,6 +36,21 @@ export const useCoffeeStore = defineStore('coffee', () => {
       console.error("Firestore Listen Error:", error)
     })
   }
+
+  // Store open/close status
+  const isStoreOpen = ref(true);
+
+  const initStoreStatus = () => {
+    const storeRef = doc(db, 'settings', 'store');
+    onSnapshot(storeRef, (snap) => {
+      if (snap.exists()) {
+        isStoreOpen.value = snap.data().isOpen;
+      }
+    });
+  };
+
+  // Call it immediately
+  initStoreStatus();
 
   // Cart tracking
   const cart = ref([])
@@ -111,6 +126,11 @@ export const useCoffeeStore = defineStore('coffee', () => {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
 
+    if (!isStoreOpen) {
+      alert("Sorry, the store just closed! We can't take new orders right now.");
+      return;
+    }
+
     await updateDrinkCount(customerUid, items.length);
     
     // Add to Firestore
@@ -161,5 +181,5 @@ export const useCoffeeStore = defineStore('coffee', () => {
       .sort((a,b) => a.createdAt - b.createdAt)
   })
 
-  return { menu, orders, activeOrders, cart, listenToOrders, placeOrder, updateStatus, togglePayment, addToCart, removeFromCart, clearCart, computeItemPrice }
+  return { menu, orders, activeOrders, cart, isStoreOpen, listenToOrders, placeOrder, updateStatus, togglePayment, addToCart, removeFromCart, clearCart, computeItemPrice }
 })
