@@ -161,6 +161,14 @@ const getStatusColor = (status) => {
                         <span class="item-price">${{ store.computeItemPrice(item, index, authStore?.drinkCount).toFixed(2)
                         }}</span>
                     </div>
+
+                    <button @click="store.removeFromCart(index)" class="delete-btn" aria-label="Remove item">
+                        <svg class="trash-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path
+                                d="M19 7L18.1327 19.1425C18.0579 20.1891 17.187 21 16.1378 21H7.86224C6.81296 21 5.94208 20.1891 5.86732 19.1425L5 7M10 11V17M14 11V17M15 7V4C15 3.44772 14.5523 3 14 3H10C9.44772 3 9 3.44772 9 4V7M4 7H20"
+                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                        </svg>
+                    </button>
                 </div>
 
                 <template v-if="!authStore.isLoggedIn">
@@ -358,5 +366,76 @@ const getStatusColor = (status) => {
     font-weight: normal;
     margin-top: 2px;
     text-transform: uppercase;
+}
+
+.cart-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    margin-bottom: 0.75rem;
+    transition: transform 0.2s ease;
+}
+
+.cart-item:hover {
+    transform: translateX(4px);
+    /* Subtle slide effect on hover */
+}
+
+.item-info h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: #1e293b;
+}
+
+.delete-btn {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #ef4444;
+    /* Vivid Red */
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);
+}
+
+.delete-btn:hover {
+    background-color: #dc2626;
+    /* Darker red on hover */
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.3);
+}
+
+.delete-btn:active {
+    background-color: #b91c1c;
+    transform: translateY(0);
+}
+
+.delete-btn .icon {
+    font-size: 1rem;
+    /* Remove the grayscale filter from before so the emoji looks natural */
+    filter: none;
+}
+
+.trash-icon {
+    width: 1.2rem;
+    height: 1.2rem;
+    stroke: white;
+    /* This makes the SVG line art white */
+}
+
+/* Ensure the button uses flex to align the SVG properly */
+.svg-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
 </style>

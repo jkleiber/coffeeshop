@@ -50,8 +50,8 @@ export const useCoffeeStore = defineStore('coffee', () => {
     })
   }
 
-  const removeFromCart = (cartId) => {
-    cart.value = cart.value.filter(item => item.cartId !== cartId)
+  const removeFromCart = (index) => {
+    cart.value.splice(index, 1)
   }
 
   const clearCart = () => {
@@ -59,8 +59,10 @@ export const useCoffeeStore = defineStore('coffee', () => {
   }
 
   const computeItemPrice = (item, index, drinkCount) => {
-      console.log(item.name + ": " + drinkCount + " + " + index)
       let itemPrice = (item.price);
+      if (!drinkCount) {
+        return itemPrice;
+      }
 
       // If the customer's additional drinks put them at one more than some multiple of 5 drinks, give them a free drink when that occurs.
       const newDrinkCount = drinkCount + index + 1;
