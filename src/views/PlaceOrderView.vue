@@ -80,7 +80,7 @@ const getStatusColor = (status) => {
 </script>
 
 <template>
-    <div class="customer-container">
+    <div class="customer-container" v-if="store.isStoreOpen">
         <h2>☕ Order Your Coffee</h2>
 
         <div v-if="myOrder && myOrder.status !== 'Completed'" class="tracker">
@@ -182,6 +182,15 @@ const getStatusColor = (status) => {
                     :disabled="!authStore.isLoggedIn && !(customerFirstName && customerLastName)">
                     Place Order
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="closed-banner" v-else>
+        <div class="banner-content">
+            <span class="banner-icon">🔒</span>
+            <div class="banner-text">
+                <strong>The Coffee Shop is Closed</strong>
             </div>
         </div>
     </div>
@@ -438,4 +447,54 @@ const getStatusColor = (status) => {
     align-items: center;
     gap: 6px;
 }
-</style>
+
+.closed-banner {
+    background-color: #ef4444;
+    /* High-contrast red */
+    color: white;
+    padding: 12px 20px;
+    position: sticky;
+    /* Sticks to the top while scrolling */
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    animation: slideDown 0.3s ease-out;
+}
+
+.banner-content {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.banner-icon {
+    font-size: 1.5rem;
+}
+
+.banner-text {
+    text-align: left;
+}
+
+.banner-text strong {
+    display: block;
+    font-size: 1rem;
+}
+
+.banner-text p {
+    margin: 0;
+    font-size: 0.85rem;
+    opacity: 0.9;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateY(-100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}</style>

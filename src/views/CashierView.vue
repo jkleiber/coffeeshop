@@ -1,5 +1,7 @@
 <script setup>
-import { onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
+import { db } from '../firebase';
+import { doc, onSnapshot, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { useCoffeeStore } from '../stores/coffeeStore'
 
 const store = useCoffeeStore()
@@ -12,11 +14,33 @@ const nextStatus = (order) => {
 
 onMounted(() => {
     store.listenToOrders()
+
+    onSnapshot(storeRef, (snap) => {
+        if (snap.exists()) isOpen.value = snap.data().isOpen;
+    });
 })
+
+const isOpen = ref(true);
+const storeRef = doc(db, 'settings', 'store');
+const toggleStore = async () => {
+    await updateDoc(storeRef, {
+        isOpen: !isOpen.value,
+        lastUpdated: serverTimestamp()
+    });
+};
 </script>
 
 <template>
     <div class="store-container">
+        <div class="store-control">
+            <div :class="['status-indicator', isOpen ? 'open' : 'closed']">
+                Store is {{ isOpen ? 'OPEN' : 'CLOSED' }}
+            </div>
+            <button @click="toggleStore" :class="isOpen ? 'close-btn' : 'open-btn'">
+                {{ isOpen ? 'Close Shop 🔒' : 'Open Shop ☕' }}
+            </button>
+        </div>
+
         <div class="header">
             <h2>🧾Order Dashboard</h2>
             <span class="badge">{{ store.activeOrders.length }} Active</span>
@@ -167,4 +191,45 @@ onMounted(() => {
     color: #888;
     margin-top: 50px;
 }
-</style>
+
+.store-control {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+}
+
+.status-indicator {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.status-indicator.open {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status-indicator.closed {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.open-btn {
+    background: #16a34a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.close-btn {
+    background: #1a1a1a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+}</style>
